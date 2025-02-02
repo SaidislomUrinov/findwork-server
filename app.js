@@ -9,6 +9,7 @@ import { sendActivator } from './src/utils/email.js';
 mongoose.connect(MONGO_URI);
 const app = express();
 app.use(cors());
+app.use(express.json());
 app.use(fileUpload());
 app.use('/api', router);
 app.listen(PORT, async ()=>{

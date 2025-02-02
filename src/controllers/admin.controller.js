@@ -42,5 +42,5 @@ export default {
                 role: admin.role
             }
         })
-    }
+    },
 }

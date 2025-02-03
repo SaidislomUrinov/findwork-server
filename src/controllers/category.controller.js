@@ -19,10 +19,8 @@ export default {
                 msg: "Successfully created",
                 data: {
                     _id: category._id,
-                    title: {
-                        uz,
-                        ru
-                    },
+                    uz,
+                    ru,
                     slug,
                     posts: 0
                 }
@@ -47,7 +45,6 @@ export default {
                     posts: await c.posts()
                 })
             }
-            console.log(data)
             res.send({
                 ok: true,
                 data
@@ -80,10 +77,10 @@ export default {
     },
     update: async (req, res) => {
         try {
-            const { id } = req.query;
+            const { _id } = req.query;
             const { uz, ru, slug } = req.body;
             if (!uz || !ru || !slug) throw new Error("Fill the rows");
-            const category = await categoryModel.findByIdAndUpdate(id, {
+            const category = await categoryModel.findByIdAndUpdate(_id, {
                 title: {
                     uz,
                     ru
@@ -96,10 +93,8 @@ export default {
                 msg: "Successfully updated",
                 data: {
                     _id: category._id,
-                    title: {
-                        uz,
-                        ru
-                    },
+                    uz,
+                    ru,
                     slug,
                     posts: await category.posts()
                 }
@@ -113,8 +108,8 @@ export default {
     },
     delete: async (req, res) => {
         try {
-            const { id } = req.query;
-            const category = await categoryModel.findByIdAndDelete(id);
+            const { _id } = req.query;
+            const category = await categoryModel.findByIdAndDelete(_id);
             if (!category) throw new Error("Category not found");
             res.send({
                 ok: true,

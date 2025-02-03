@@ -37,12 +37,17 @@ export default {
     getAll: async (_, res) => {
         try {
             const categories = await categoryModel.find({}).select('title slug');
-            const data = [...categories.map(async (c) => {
-                return {
-                    ...c.toObject(),
+            const data = [];
+            for (let c of categories) {
+                data.push({
+                    _id: c?._id,
+                    uz: c.title.uz,
+                    ru: c.title.ru,
+                    slug: c.slug,
                     posts: await c.posts()
-                }
-            })];
+                })
+            }
+            console.log(data)
             res.send({
                 ok: true,
                 data
@@ -77,7 +82,7 @@ export default {
         try {
             const { id } = req.query;
             const { uz, ru, slug } = req.body;
-            if (!uz ||!ru ||!slug) throw new Error("Fill the rows");
+            if (!uz || !ru || !slug) throw new Error("Fill the rows");
             const category = await categoryModel.findByIdAndUpdate(id, {
                 title: {
                     uz,

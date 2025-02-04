@@ -11,7 +11,7 @@ const schema = new Schema({
         lowercase: true
     },
 });
-schema.methods.posts = async function (){
+schema.methods.vacancies = async function (){
     return 0
 }
 export default model('Category', schema);

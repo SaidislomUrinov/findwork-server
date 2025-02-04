@@ -4,6 +4,8 @@ import { sendActivator } from "../utils/email.js";
 import emailValidaor from 'email-validator';
 import jwt from 'jsonwebtoken';
 import { USER_JWT_SECRET } from "../utils/env.js";
+import categoryModel from "../models/category.model.js";
+import vacancyModel from "../models/vacancy.model.js";
 export default {
     signUp: async (req, res) => {
         const { email, firstName, password, role } = req.body;
@@ -110,4 +112,22 @@ export default {
             return res.send({ ok: false, msg: error.message });
         }
     },
+    getStats: async (req, res) => {
+        try {
+            const companies = await userModel.countDocuments({ role: 'employer', isCompany: true });
+            const categories = await categoryModel.countDocuments();
+            const vacancies = await vacancyModel.countDocuments({ status: 'active' });
+            return res.send({
+                ok: true,
+                data: {
+                    companies,
+                    categories,
+                    vacancies
+                }
+            })
+        } catch (error) {
+            console.log(error);
+            res.send({ ok: false, msg: error.message });
+        }
+    }
 }

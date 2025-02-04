@@ -22,7 +22,7 @@ export default {
                     uz,
                     ru,
                     slug,
-                    posts: 0
+                    vacancies: 0
                 }
             });
         } catch (error) {
@@ -42,7 +42,7 @@ export default {
                     uz: c.title.uz,
                     ru: c.title.ru,
                     slug: c.slug,
-                    posts: await c.posts()
+                    vacancies: await c.vacancies()
                 })
             }
             res.send({
@@ -65,7 +65,7 @@ export default {
                 ok: true,
                 data: {
                     ...category.toObject(),
-                    posts: await category.posts()
+                    vacancies: await category.vacancies()
                 }
             });
         } catch (error) {
@@ -96,7 +96,7 @@ export default {
                     uz,
                     ru,
                     slug,
-                    posts: await category.posts()
+                    vacancies: await category.vacancies()
                 }
             });
         } catch (error) {

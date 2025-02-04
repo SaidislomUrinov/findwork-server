@@ -25,6 +25,10 @@ const schema = new Schema({
     role: {
         type: String,
         enum: ['employer', 'staff']
-    }
+    },
+    isCompany: {
+        type: Boolean,
+        default: false
+    },
 });
 export default model('User', schema);

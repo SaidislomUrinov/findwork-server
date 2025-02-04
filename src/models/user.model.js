@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 const schema = new Schema({
+    image: String,
     firstName: String,
     lastName: String,
     about: String,

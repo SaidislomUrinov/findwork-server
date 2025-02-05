@@ -6,48 +6,52 @@ import jwt from 'jsonwebtoken';
 import { USER_JWT_SECRET } from "../utils/env.js";
 import categoryModel from "../models/category.model.js";
 import vacancyModel from "../models/vacancy.model.js";
+import { getNow } from "../utils/date.js";
+import activatorModel from "../models/activator.model.js";
 export default {
-    signUp: async (req, res) => {
-        const { email, firstName, password, role } = req.body;
+    auth: async (req, res) => {
         try {
-            if (!email || !firstName || !password || !role) throw new Error("fill_the_rows");
+            const email = req.body.email?.toLowerCase().trim();
+            if (!email) throw new Error("fill_the_rows");
 
-            const validate = emailValidaor.validate(email);
-            if (!validate) throw new Error("invalid_email");
+            if (!emailValidaor.validate(email)) throw new Error("invalid_email");
 
-            const user = await userModel.findOne({
-                email: email.toLowerCase().trim(),
-                firstName,
-                role,
-                password: md5(password),
-            });
-            await user.save();
-            await sendActivator(email, user._id);
+            let user = await userModel.findOne({ email });
+
+            if (!user) {
+                user = new userModel({ email });
+                await user.save();
+            }
+
+            const activator = new activatorModel({ user: user._id });
+            await activator.save();
+            await sendActivator(email, activator._id);
+
             return res.send({ ok: true, msg: "activator_sended" });
         } catch (error) {
-            if (error.code === 11000) {
-                return res.send({ ok: false, msg: "alaredy_registered" });
-            }
             return res.send({ ok: false, msg: error.message });
         }
     },
-    signIn: async (req, res) => {
-        const { email, password } = req.body;
+    verifyActivator: async (req, res) => {
         try {
-            if (!email || !password) throw new Error("fill_the_rows");
-            // 
-            const user = await userModel.findOne({ email: email.toLowerCase().trim(), password: md5(password) });
-            if (!user) throw new Error("user_not_found");
-            // 
-            if (!user.active) throw new Error("user_not_activated");
-            // 
-            const access = jwt.sign({ _id: user._id }, USER_JWT_SECRET);
+            const { _id } = req.query;
+            const activator = await activatorModel.findOne({ _id }).populate('user');
+            
+            if (!activator) throw new Error("link_not_found");
+
+            if (activator.created + 300 < getNow()) throw new Error("link_expired");
+
+            if (!activator.isActive) throw new Error("link_alaredy_used");
+
+            activator.isActive = true;
+            await activator.save();
+            const user = activator.user;
+            const access = jwt.sign({ _id: user._id }, USER_JWT_SECRET, { expiresIn: '1d' });
             user.access = access;
             await user.save();
-            return res.send({
+            res.send({
                 ok: true,
                 msg: "success",
-                access,
                 data: {
                     _id: user._id,
                     email: user.email,
@@ -56,9 +60,12 @@ export default {
                     lastName: user.lastName,
                     role: user.role
                 }
-            });
-        } catch (err) {
-            return res.send({ ok: false, msg: err.message });
+            })
+        } catch (error) {
+            res.send({
+                ok: false,
+                msg: error.message
+            })
         }
     },
     verify: async (req, res) => {
@@ -71,48 +78,8 @@ export default {
             return res.send({ ok: false, msg: error.message });
         }
     },
-    activate: async (req, res) => {
-        try {
-            const { _id } = req.body;
-            const user = await userModel.findByIdAndUpdate(_id, { active: true }, { new: true });
-            // 
-            if (!user) throw new Error("user_not_found");
-            // 
-            const access = jwt.sign({ _id: user._id }, USER_JWT_SECRET);
-            user.access = access;
-            await user.save();
-            return res.send({
-                ok: true,
-                msg: "success",
-                access,
-                data: {
-                    _id: user._id,
-                    email: user.email,
-                    image: user.image,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    role: user.role
-                }
-            });
-        } catch (error) {
-            res.send({
-                ok: false,
-                msg: error.message
-            })
-        }
-    },
-    resendActivator: async (req, res) => {
-        try {
-            const { email } = req.body;
-            const user = await userModel.findOne({ email: email.toLowerCase().trim() });
-            if (!user) throw new Error("user_not_found");
-            await sendActivator(email, user._id);
-            return res.send({ ok: true, msg: "activator_sended" });
-        } catch (error) {
-            return res.send({ ok: false, msg: error.message });
-        }
-    },
-    getStats: async (req, res) => {
+    // 
+    getStats: async (_, res) => {
         try {
             const companies = await userModel.countDocuments({ role: 'employer', isCompany: true });
             const categories = await categoryModel.countDocuments();

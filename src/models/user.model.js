@@ -12,13 +12,8 @@ const schema = new Schema({
         lowercase: true,
         trim: true
     },
-    password: String,
     access: String,
     block: {
-        type: Boolean,
-        default: false
-    },
-    active: {
         type: Boolean,
         default: false
     },

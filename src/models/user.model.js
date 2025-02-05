@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import { getNow } from "../utils/date.js";
 const schema = new Schema({
     image: String,
     firstName: String,
@@ -25,5 +26,9 @@ const schema = new Schema({
         type: Boolean,
         default: false
     },
+    created: {
+        type: Number,
+        default: getNow
+    }
 });
 export default model('User', schema);

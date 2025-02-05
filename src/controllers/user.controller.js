@@ -1,4 +1,3 @@
-import md5 from "md5";
 import userModel from "../models/user.model.js";
 import { sendActivator } from "../utils/email.js";
 import emailValidaor from 'email-validator';
@@ -36,7 +35,7 @@ export default {
         try {
             const { _id } = req.query;
             const activator = await activatorModel.findOne({ _id }).populate('user');
-            
+
             if (!activator) throw new Error("link_not_found");
 
             if (activator.created + 300 < getNow()) throw new Error("link_expired");
@@ -59,7 +58,8 @@ export default {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     role: user.role
-                }
+                },
+                access
             })
         } catch (error) {
             res.send({

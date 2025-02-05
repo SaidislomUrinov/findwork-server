@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 import { getNow } from "../utils/date.js";
+import applicationModel from "./application.model.js";
 
 const schema = new Schema({
     tile: String,
@@ -22,7 +23,7 @@ const schema = new Schema({
     ended: Number,
     status: {
         type: String,
-        enum: ['pending', 'active', 'inactive', 'comleted']
+        enum: ['pending', 'active', 'inactive', 'completed']
     },
     isTop: {
         type: Boolean,
@@ -60,4 +61,13 @@ const schema = new Schema({
         cpi: Boolean
     }
 });
+schema.methods.apllications = async function () {
+    try {
+        const applications = await applicationModel.countDocuments({ vacancy: this._id, status: 'pending' });
+        return applications;
+    } catch (error) {
+        console.log(error.message);
+        return 0
+    }
+}
 export default model('Vacancy', schema)

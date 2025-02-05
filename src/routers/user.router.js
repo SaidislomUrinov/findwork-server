@@ -7,3 +7,6 @@ export default Router()
     .get('/verifyActivator', userController.verifyActivator)
     .get('/verify', userAuth, userController.verify)
     .get('/getStats', userController.getStats)
+    // 
+    .post('/updateRole', userAuth, userController.updateRole)
+    .get('/getMyStats', userAuth, userController.getMyStats)

@@ -7,6 +7,7 @@ import categoryModel from "../models/category.model.js";
 import vacancyModel from "../models/vacancy.model.js";
 import { getNow } from "../utils/date.js";
 import activatorModel from "../models/activator.model.js";
+import applicationModel from "../models/application.model.js";
 export default {
     auth: async (req, res) => {
         try {
@@ -48,7 +49,7 @@ export default {
             const access = jwt.sign({ _id: user._id }, USER_JWT_SECRET, { expiresIn: '1d' });
             user.access = access;
             await user.save();
-            res.send({
+            return res.send({
                 ok: true,
                 msg: "success",
                 data: {
@@ -62,7 +63,7 @@ export default {
                 access
             })
         } catch (error) {
-            res.send({
+            return res.send({
                 ok: false,
                 msg: error.message
             })
@@ -70,7 +71,7 @@ export default {
     },
     verify: async (req, res) => {
         try {
-            res.send({
+            return res.send({
                 ok: true,
                 data: req.user
             });
@@ -93,8 +94,45 @@ export default {
                 }
             })
         } catch (error) {
-            console.log(error);
+            return res.send({ ok: false, msg: error.message });
+        }
+    },
+    updateRole: async (req, res) => {
+        try {
+            const { role } = req.body;
+            if (!role) throw new Error('fill_the_rows');
+            const user = req.user;
+            user.role = role;
+            await user.save();
+            return res.send({
+                ok: true,
+                msg: "success"
+            });
+        } catch (error) {
+            return res.send({ ok: false, msg: error.message });
+        }
+    },
+    getMyStats: async (req, res) => {
+        const { role, _id } = req.user;
+        try {
+            if (role === 'employer') {
+                const vacancies = await vacancyModel.find({ 
+                    user: _id, 
+                    status: { $in: ['active', 'pending'] }, 
+                    ended: { $gte: getNow() } 
+                });
+    
+                const applications = (await Promise.all(vacancies.map(v => v.applications()))).reduce((total, count) => total + count, 0);
+    
+                return res.send({ ok: true, data: { vacancies: vacancies.length, applications } });
+            }
+    
+            const applications = await applicationModel.countDocuments({ user: _id, status: 'pending' });
+            res.send({ ok: true, data: { applications } });
+            
+        } catch (error) {
             res.send({ ok: false, msg: error.message });
         }
     }
+    
 }
